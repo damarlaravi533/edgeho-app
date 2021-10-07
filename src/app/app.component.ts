@@ -99,15 +99,14 @@ export class AppComponent implements OnInit {
     onGridReady(params: any) {
         this.gridApi = params.api;
         this.gridColumnApi = params.columnApi;
-
-        this.http.get('https://www.ag-grid.com/example-assets/olympic-winners.json')
-            .subscribe((data: any) => {
-                this.results = data;
-                this.results.forEach((item: any) => {
-                    item.id = AppComponent.newGuid();
-                })
-                this.gridApi.setRowData(this.results);
-            });
+        const url: string = 'https://www.ag-grid.com/example-assets/olympic-winners.json';
+        this.http.get(url).subscribe((data: any) => {
+            this.results = data;
+            this.results.forEach((item: any) => {
+                item.id = AppComponent.newGuid();
+            })
+            this.gridApi.setRowData(this.results);
+        });
     }
 
     public getContextMenuItems(params: any = {}): any {
