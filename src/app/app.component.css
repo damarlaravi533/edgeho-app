@@ -1,0 +1,21 @@
+.custom-cell {
+    cursor: all-scroll;
+}
+
+:host ::ng-deep .ag-theme-alpine .ag-row-selected {
+    background-color: red;
+}
+
+:host ::ng-deep .ag-theme-alpine .ag-ltr .ag-cell-focus {
+    border: 1px solid red;
+    cursor: all-scroll;
+}
+
+:host ::ng-deep .ag-theme-alpine .ag-ltr .ag-has-focus .ag-cell-focus:not(.ag-cell-range-selected) {
+    border: 1px solid red;
+    cursor: all-scroll;
+}
+
+:host ::ng-deep .ag-theme-alpine .ag-range-handle {
+    cursor: cell;
+}

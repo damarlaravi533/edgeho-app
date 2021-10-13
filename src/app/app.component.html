@@ -7,10 +7,11 @@
         [gridOptions]="gridOptions"
         [modules]="modules"
         [getRowStyle]="getRowStyle"
-        [pinnedTopRowData]="pinnedTopRowData"
-        [pinnedBottomRowData]="pinnedBottomRowData"
-        [frameworkComponents]="frameworkComponents"
-        [suppressContextMenu]="false"
+        [enableRangeSelection]="true"
+        [suppressMultiRangeSelection]=true
+        [enableFillHandle]="true"
+        (cellClicked)="cellClickHandler($event)"
         (gridReady)="onGridReady($event)"
+        (rangeSelectionChanged)="rangeSelectionChanged($event)"
     ></ag-grid-angular>
 </div>

@@ -1,9 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
-import {CustomRowFrozeComponent} from "./custom-row-froze/custom-row-froze.component";
-import {GridOptions} from "ag-grid-community";
-import {MenuModule} from '@ag-grid-enterprise/menu';
-import {AppEnum} from "./app.enum";
+import {CellClickedEvent, GridOptions, RangeSelectionChangedEvent} from "ag-grid-community";
+import {RangeSelectionModule} from "@ag-grid-enterprise/all-modules";
 
 @Component({
     selector: 'app-root',
@@ -15,13 +13,13 @@ export class AppComponent implements OnInit {
     public defaultColDef: any;
     public getRowStyle: any;
     public modules: any[] = [];
-    public pinnedTopRowData: any;
-    public pinnedBottomRowData: any;
-    public frameworkComponents: any;
     public gridOptions: GridOptions = {};
     private gridApi: any;
     private gridColumnApi: any;
     private results: any[] = [];
+    private cellRanges: any;
+    private cellValue: string = '';
+    private column: any;
 
     constructor(private http: HttpClient) {
     }
@@ -35,65 +33,29 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.modules = [
-            MenuModule
-        ]
         this.columnDefs = [
-            {
-                field: 'athlete',
-                cellRendererSelector: (params: any) => {
-                    if (params.node.rowPinned) {
-                        return {
-                            component: 'customPinnedRowRenderer',
-                            params: {style: {color: 'blue'}},
-                        };
-                    } else {
-                        return undefined;
-                    }
-                },
-            },
-            {
-                field: 'age',
-                cellRendererSelector: (params: any) => {
-                    if (params.node.rowPinned) {
-                        return {
-                            component: 'customPinnedRowRenderer',
-                            params: {style: {'font-style': 'italic'}},
-                        };
-                    } else {
-                        return undefined;
-                    }
-                },
-            },
+            {field: 'athlete'},
+            {field: 'age'},
             {field: 'country'},
             {field: 'year'},
             {field: 'date'},
-            {field: 'sport'},
+            {field: 'sport'}
         ];
         this.defaultColDef = {
             width: 200,
             sortable: true,
             filter: true,
-            resizable: true,
+            resizable: true
         };
+        this.modules = [
+            RangeSelectionModule
+        ]
 
         this.gridOptions = {
             suppressContextMenu: true,
             columnDefs: this.columnDefs,
             enableRangeSelection: true,
-            getContextMenuItems: (params) => this.getContextMenuItems(params),
-            allowContextMenuWithControlKey: true
         }
-
-        // @ts-ignore
-        this.getRowStyle = (params: any) => {
-            if (params.node.rowPinned) {
-                return {'font-weight': 'bold'};
-            }
-        };
-        this.frameworkComponents = {
-            customPinnedRowRenderer: CustomRowFrozeComponent,
-        };
     }
 
     onGridReady(params: any) {
@@ -109,24 +71,24 @@ export class AppComponent implements OnInit {
         });
     }
 
-    public getContextMenuItems(params: any = {}): any {
-        return [
-            {
-                name: 'Froze Row',
-                action: () => this.frozeAndUnfrozeRows(params.node.data, 'froze'),
-                cssClasses: ['redFont', 'bold'],
-            },
-            {
-                name: 'Unfroze Row',
-                action: () => this.frozeAndUnfrozeRows(params.node.data, 'unfroze'),
-            },
-        ];
+    public cellClickHandler(ev: CellClickedEvent): void {
+        this.cellValue = ev.value;
+        this.column = ev.column;
     }
 
-    private frozeAndUnfrozeRows(data: any, action: string) {
-        let rowNumber: number = this.results.findIndex(d => d.id === data.id);
-        rowNumber = action === AppEnum.UNFROZE_ROW ? rowNumber : rowNumber + 1;
-        const rows = this.results.slice(0, rowNumber);
-        this.gridApi.setPinnedTopRowData(rows);
+    public rangeSelectionChanged(e: RangeSelectionChangedEvent): void {
+        this.cellRanges = this.gridApi.getCellRanges();
+        if (!e.started && e.finished) {
+            const api = this.gridApi;
+            this.cellRanges.forEach((range: any) => {
+                const startRow = Math.min(range.startRow.rowIndex, range.endRow.rowIndex);
+                const endRow = Math.max(range.startRow.rowIndex, range.endRow.rowIndex);
+                for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+                    const rowModel = api.getModel();
+                    const rowNode = rowModel.getRow(rowIndex);
+                    rowNode.setDataValue(this.column, this.cellValue);
+                }
+            });
+        }
     }
 }
